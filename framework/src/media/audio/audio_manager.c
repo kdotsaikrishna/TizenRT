@@ -241,11 +241,11 @@ static audio_manager_result_t find_audio_card(audio_io_direction_t direct)
 		}
 
 		if (type == type_chr) {
+			pthread_mutex_init(&(card[card_id].card_mutex), NULL);
 			pthread_mutex_lock(&(card[card_id].card_mutex));
 			card[card_id].config[device_id].status = AUDIO_CARD_IDLE;
 			card[card_id].card_id = card_id;
 			card[card_id].device_id = device_id;
-			pthread_mutex_init(&(card[card_id].card_mutex), NULL);
 			found_cards++;
 			medvdbg("Found an audio card, total card : %d id : %d device : %d\n", found_cards, card_id, device_id);
 			pthread_mutex_unlock(&(card[card_id].card_mutex));
@@ -1303,6 +1303,47 @@ unsigned int get_user_output_bytes_to_frame(unsigned int bytes)
 	frame_size = bytes / card->resample.user_channel / card->resample.user_format;
 
 	return frame_size;
+}
+
+unsigned int get_card_buffer_size(audio_io_direction_t direct)
+{
+	audio_card_info_t *card;
+	struct ap_buffer_info_s buf_info;
+	char path[AUDIO_DEVICE_FULL_PATH_LENGTH];
+	int fd;
+	if (direct == INPUT) {
+		if ((g_actual_audio_in_card_id < 0)) {
+			return 0;
+		}
+		card = &g_audio_in_cards[g_actual_audio_in_card_id];
+	} else {
+		if ((g_actual_audio_out_card_id < 0)) {
+			return 0;
+		}
+		card = &g_audio_out_cards[g_actual_audio_out_card_id];
+	}
+	get_card_path(path, card->card_id, card->device_id, direct);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		meddbg("card open fail.. path : %s errno : %d\n", path, errno);
+		return 0;
+	}
+	if (ioctl(fd, AUDIOIOC_GETBUFFERINFO, (unsigned long)&buf_info) < 0) {
+		/* Driver doesn't reveal buffer size, so return default value we defined here */
+		meddbg("ioctl failed. errno : %d\n", errno);
+		return AUDIO_STREAM_VOICE_RECOGNITION_PERIOD_SIZE;
+	}
+	return buf_info.buffer_size;
+}
+
+unsigned int get_input_card_buffer_size(void)
+{
+	return get_card_buffer_size(INPUT);
+}
+
+unsigned int get_output_card_buffer_size(void)
+{
+	return get_card_buffer_size(OUTPUT);
 }
 
 audio_manager_result_t get_max_audio_volume(uint8_t *volume)

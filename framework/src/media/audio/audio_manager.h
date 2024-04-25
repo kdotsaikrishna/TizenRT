@@ -369,6 +369,28 @@ unsigned int get_user_output_frames_to_byte(unsigned int frames);
 unsigned int get_user_output_bytes_to_frame(unsigned int bytes);
 
 /****************************************************************************
+ * Name: get_output_card_buffer_size
+ *
+ * Description:
+ *   Get byte size of record buffer of actual output card.
+ *
+ * Return Value:
+ *   On success, the number of bytes in buffer size of output card. Otherwise, 0.
+ ****************************************************************************/
+unsigned int get_output_card_buffer_size(void);
+
+/****************************************************************************
+ * Name: get_input_card_buffer_size
+ *
+ * Description:
+ *   Get byte size of record buffer of actual input card.
+ *
+ * Return Value:
+ *   On success, the number of bytes in buffer size of input card. Otherwise, 0.
+ ****************************************************************************/
+unsigned int get_input_card_buffer_size(void);
+
+/****************************************************************************
  * Name: get_max_audio_volume
  *
  * Description:
