@@ -1,0 +1,15 @@
+#
+# For a description of the syntax of this configuration file,
+# see kconfig-language at https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
+#
+
+config EXAMPLES_PLAYER
+	bool "Flash and SPI test application"
+	default n
+	depends on HAVE_CXX
+	---help---
+		Enable Flash and SPI test application
+
+config USER_ENTRYPOINT
+	string
+	default "player_main" if ENTRY_PLAYER

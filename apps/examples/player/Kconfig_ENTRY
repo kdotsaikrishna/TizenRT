@@ -1,0 +1,3 @@
+config ENTRY_PLAYER
+	bool "Flash and SPI test application"
+	depends on EXAMPLES_PLAYER
