@@ -32,6 +32,7 @@ StreamHandler::StreamHandler() :
 	mWorkerStackSize(4096),
 	mIsWorkerAlive(false)
 {
+	var = 0;
 }
 
 bool StreamHandler::open()
@@ -149,7 +150,13 @@ void StreamHandler::sleepWorker()
 	std::unique_lock<std::mutex> lock(mMutex);
 	// In case of overrun, DO NOT sleep worker.
 	if (mIsWorkerAlive) {
+		if (var == 1) {
+			meddbg("stream worker before wait\n");
+		}
 		mCondv.wait(lock);
+		if (var == 1) {
+			meddbg("stream worker after wait\n");
+		}
 	}
 }
 

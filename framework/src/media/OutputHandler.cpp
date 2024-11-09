@@ -31,6 +31,7 @@ OutputHandler::OutputHandler() :
 	mIsFlushing(false)
 {
 	mWorkerStackSize = CONFIG_OUTPUT_DATASOURCE_STACKSIZE;
+	var = 1;
 }
 
 void OutputHandler::setOutputDataSource(std::shared_ptr<OutputDataSource> source)
@@ -104,16 +105,18 @@ bool OutputHandler::stop()
 
 void OutputHandler::flush()
 {
-	medvdbg("OutputHandler::flush() enter\n");
+	meddbg("OutputHandler::flush() enter\n");
 
 	if (mIsWorkerAlive) {
 		std::unique_lock<std::mutex> lock(mFlushMutex);
 		mIsFlushing = true;
 		wakenWorker();
+		meddbg("flush before wait\n");
 		mFlushCondv.wait(lock);
+		meddbg("meddbg after wait\n");
 	}
 
-	medvdbg("OutputDataSource::flush() exit\n");
+	meddbg("OutputDataSource::flush() exit\n");
 }
 
 void OutputHandler::resetWorker()
@@ -209,6 +212,8 @@ ssize_t OutputHandler::writeToStreamBuffer(unsigned char *buf, size_t size)
 
 bool OutputHandler::registerCodec(audio_type_t audioType, unsigned int channels, unsigned int sampleRate)
 {
+	mBufferReader->var = 1;
+	mBufferWriter->var = 1;
 	switch (audioType) {
 	case AUDIO_TYPE_OPUS: {
 		auto encoder = Encoder::create(audioType, channels, sampleRate);

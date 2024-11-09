@@ -72,6 +72,7 @@ protected:
 	pthread_t mWorker;
 	size_t mWorkerStackSize;
 	bool mIsWorkerAlive;
+	int var;
 private:
 	void createWorker();
 	void destroyWorker();

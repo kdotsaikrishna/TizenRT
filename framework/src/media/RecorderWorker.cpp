@@ -35,6 +35,7 @@ RecorderWorker::RecorderWorker()
 	mThreadName = "RecorderWorker";
 	mStacksize = CONFIG_MEDIA_RECORDER_STACKSIZE;
 	mPriority = CONFIG_MEDIA_RECORDER_THREAD_PRIORITY;
+	// mWorkerQueue.var = 1;
 }
 RecorderWorker::~RecorderWorker()
 {

@@ -17,10 +17,12 @@
  ******************************************************************/
 
 #include "MediaQueue.h"
+#include "media/media_log.h"
 
 namespace media {
 MediaQueue::MediaQueue()
 {
+	var = 0;
 }
 MediaQueue::~MediaQueue()
 {
@@ -28,9 +30,28 @@ MediaQueue::~MediaQueue()
 
 std::function<void()> MediaQueue::deQueue()
 {
+	char *str;
+	if (var != 0) {
+		if (var == 1) {
+			str = "[RW]";
+		}
+		if (var == 2) {
+			str = "[ROW]";
+		}
+		meddbg("%s before dequeue lock\n", str);
+	}
 	std::unique_lock<std::mutex> lock(mQueueMtx);
+	if (var != 0) {
+		meddbg("%s after dequeue lock\n", str);
+	}
 	if (mQueueData.empty()) {
+		if (var != 0) {
+			meddbg("%s queue empty ---- before wait\n", str);
+		}
 		mQueueCv.wait(lock);
+		if (var != 0) {
+			meddbg("%s after wait\n", str);
+		}
 	}
 
 	auto data = std::move(mQueueData.front());

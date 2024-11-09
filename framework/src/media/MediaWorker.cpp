@@ -70,14 +70,16 @@ void MediaWorker::stopWorker()
 	if (mRefCnt > 0) {
 		--mRefCnt;
 	}
-	medvdbg("%s::stopWorker() - decrease RefCnt : %d\n", mThreadName, mRefCnt);
+	meddbg("%s::stopWorker() - decrease RefCnt : %d\n", mThreadName, mRefCnt);
 	if (mRefCnt <= 0) {
 		std::atomic<bool> &refBool = mIsRunning;
 		mWorkerQueue.enQueue([&refBool]() {
+			meddbg("Inside Enqueue stopworker\n");
 			refBool = false;
 		});
+		meddbg("after enqueue stopworker\n");
 		pthread_join(mWorkerThread, NULL);
-		medvdbg("%s::stopWorker() - mWorkerthread exited\n", mThreadName);
+		meddbg("%s::stopWorker() - mWorkerthread exited\n", mThreadName);
 	}
 }
 

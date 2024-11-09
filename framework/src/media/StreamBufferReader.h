@@ -37,6 +37,7 @@ public:
 
 public:
 	bool isEndOfStream();
+	int var;
 
 private:
 	std::shared_ptr<StreamBuffer> mStream;

@@ -30,6 +30,7 @@ namespace stream {
 StreamBufferReader::StreamBufferReader(std::shared_ptr<StreamBuffer> stream)
 	: mStream(stream)
 {
+	var = 0;
 	assert(mStream);
 }
 
@@ -69,7 +70,13 @@ size_t StreamBufferReader::read(unsigned char *buf, size_t size, bool sync)
 				// Writer may be waiting for more spaces, so it's necessary to notify after reading.
 				mStream->getCondv().notify_one();
 				// Then wait notification from writer.
+				if (var == 1) {
+					meddbg("reader before wait\n");
+				}
 				mStream->getCondv().wait(lock);
+				if (var == 1) {
+					meddbg("reader after wait\n");
+				}
 			}
 		}
 

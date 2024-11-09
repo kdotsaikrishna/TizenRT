@@ -102,6 +102,8 @@
 
 #define VOLUME_JSON_PATH "/mnt/volume_level.json"
 
+int aayush = 0;
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -1181,6 +1183,7 @@ error_with_pcm:
 
 int start_audio_stream_in(void *data, unsigned int frames)
 {
+	aayush = 1;
 	int ret = 0;
 	int prepare_retry = AUDIO_STREAM_RETRY_COUNT;
 	audio_card_info_t *card;
@@ -1188,14 +1191,17 @@ int start_audio_stream_in(void *data, unsigned int frames)
 
 	if (g_actual_audio_in_card_id < 0) {
 		meddbg("Found no active input audio card\n");
+		aayush = 0;
 		return AUDIO_MANAGER_NO_AVAIL_CARD;
 	}
 
 	card = &g_audio_in_cards[g_actual_audio_in_card_id];
 
 	pthread_mutex_lock(&(card->card_mutex));
+	aayush = 2;
 
 	if (card->config[card->device_id].status == AUDIO_CARD_PAUSE) {
+		meddbg("Sending resume ioctl call\n");
 		ret = ioctl(pcm_get_file_descriptor(card->pcm), AUDIOIOC_RESUME, 0UL);
 		if (ret < 0) {
 			meddbg("Fail to ioctl AUDIOIOC_RESUME, ret = %d\n", ret);
@@ -1203,6 +1209,7 @@ int start_audio_stream_in(void *data, unsigned int frames)
 			goto error_with_lock;
 		}
 	}
+	aayush = 3;
 
 	card->config[card->device_id].status = AUDIO_CARD_RUNNING;
 
@@ -1222,10 +1229,12 @@ int start_audio_stream_in(void *data, unsigned int frames)
 
 	do {
 		ret = pcm_readi(card->pcm, buffer_ptr, frames_to_read);
+		aayush = 4;
 		medvdbg("Read %d frames\n", ret);
 
 		if (ret == -EPIPE) {
 			ret = pcm_prepare(card->pcm);
+			aayush = 5;
 			medvdbg("PCM is reprepared\n");
 			if (ret != OK) {
 				meddbg("Fail to pcm_prepare()\n");
@@ -1249,7 +1258,9 @@ int start_audio_stream_in(void *data, unsigned int frames)
 		// Tell the number of frames saved in resampling buffer
 		card->resample.frames = ret;
 		// Process resampling
+		aayush = 6;
 		ret = (int)resample_stream_in(card, data, frames);
+		aayush = 7;
 		if (ret < 0) {
 			meddbg("Fail to resample!!\n");
 			goto error_with_lock;
@@ -1258,7 +1269,7 @@ int start_audio_stream_in(void *data, unsigned int frames)
 
 error_with_lock:
 	pthread_mutex_unlock(&(card->card_mutex));
-
+	aayush = 0;
 	return ret;
 }
 

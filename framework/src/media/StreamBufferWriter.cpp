@@ -30,6 +30,7 @@ namespace stream {
 StreamBufferWriter::StreamBufferWriter(std::shared_ptr<StreamBuffer> stream)
 	: mStream(stream)
 {
+	var = 0;
 	assert(mStream);
 }
 
@@ -45,7 +46,7 @@ size_t StreamBufferWriter::write(unsigned char *buf, size_t size, bool sync)
 			// Streaming may be stopped (EOS was set)
 			if (mStream->isEndOfStream()) {
 				// Don't need to write anymore
-				medvdbg("EOS break\n");
+				meddbg("EOS break\n");
 				break;
 			}
 
@@ -61,7 +62,13 @@ size_t StreamBufferWriter::write(unsigned char *buf, size_t size, bool sync)
 				// Reader may be waiting for more data, so it's necessary to notify after writing.
 				mStream->getCondv().notify_one();
 				// Then wait notification from reader.
+				if (var == 1) {
+					meddbg("writer before waiting\n");
+				}
 				mStream->getCondv().wait(lock);
+				if (var == 1) {
+					meddbg("writer after waiting\n");
+				}
 			}
 		}
 	} else {

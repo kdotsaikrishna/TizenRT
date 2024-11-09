@@ -33,6 +33,7 @@ public:
 public:
 	virtual size_t write(unsigned char *buf, size_t size, bool sync = true);
 	virtual size_t sizeOfSpace();
+	int var;
 
 public:
 	void setEndOfStream();

@@ -48,11 +48,10 @@ protected:
 	int mPriority;
 	const char *mThreadName;
 	virtual bool processLoop();
+	MediaQueue mWorkerQueue;
 
 private:
 	static void *mediaLooper(void *);
-
-	MediaQueue mWorkerQueue;
 	std::atomic<bool> mIsRunning;
 	int mRefCnt;
 	pthread_t mWorkerThread;

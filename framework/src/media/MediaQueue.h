@@ -25,6 +25,7 @@
 #include <atomic>
 #include <iostream>
 #include <functional>
+#include "media/media_log.h"
 
 namespace media {
 class MediaQueue
@@ -34,7 +35,20 @@ public:
 	~MediaQueue();
 	template <typename _Callable, typename... _Args>
 	void enQueue(_Callable &&__f, _Args &&... __args) {
+		char *str;
+		if (var != 0) {
+			if (var == 1) {
+				str = "[RW]";
+			}
+			if (var == 2) {
+				str = "[ROW]";
+			}
+			meddbg("%s before enqueue lock\n", str);
+		}
 		std::unique_lock<std::mutex> lock(mQueueMtx);
+		if (var != 0) {
+			meddbg("%s after enqueue lock\n", str);
+		}
 		std::function<void()> func = std::bind(std::forward<_Callable>(__f), std::forward<_Args>(__args)...);
 		mQueueData.push(func);
 		mQueueCv.notify_one();
@@ -42,6 +56,7 @@ public:
 	std::function<void()> deQueue();
 	bool isEmpty();
 	void clearQueue(void);
+	int var;
 
 private:
 	std::queue<std::function<void()>> mQueueData;

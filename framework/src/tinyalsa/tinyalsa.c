@@ -118,6 +118,8 @@
 
 #define PCM_ERROR_MAX 128
 
+int verma = 0;
+
 /** A PCM handle.
  * @ingroup libtinyalsa-pcm
  */
@@ -571,6 +573,7 @@ int pcm_writei(struct pcm *pcm, const void *data, unsigned int frame_count)
  */
 int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 {
+	verma = 1;
 	int nbytes = 0, pending = 0, offset = 0;
 	struct audio_buf_desc_s bufdesc;
 	struct ap_buffer_s *apb;
@@ -580,14 +583,17 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 	struct timespec st_time;
 
 	if (pcm == NULL || data == NULL || frame_count == 0) {
+		verma = 0;
 		return -EINVAL;
 	}
 
 	if (!(pcm->flags & PCM_IN)) {
+		verma = 0;
 		return -EINVAL;
 	}
 
 	if (frame_count > INT_MAX) {
+		verma = 0;
 		return -EINVAL;
 	}
 
@@ -601,16 +607,19 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 
 	/* If device is not yet started, start now! */
 	if ((!pcm->draining) && (!pcm->running) && (pcm_start(pcm) < 0)) {
+		verma = 0;
 		return -errno;
 	}
 
 	while (pending > 0) {
-
+		verma = 2;
 		/* Read data */
 		if (pcm->next_buf != NULL) {
+			verma = 3;
 			/* We have a pending buffer with some data in it. */
 			apb = pcm->next_buf;
 			if (pending <= pcm->next_size) {
+				verma = 4;
 				/* User wants less data than we have in buffer.
 				   Copy the requested amount of data to user buffer and return */
 				memcpy((char *)data + offset, apb->samp + pcm->next_offset, pending);
@@ -619,6 +628,7 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 
 				nbytes = pending;
 			} else {
+				verma = 5;
 				/* User wants more data than we have in buffer.
 				   Copy available data to user buffer, enqueue buffer and return */
 				memcpy((char *)data + offset, apb->samp + pcm->next_offset, pcm->next_size);
@@ -633,35 +643,46 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 				apb->flags = 0;
 				bufdesc.u.pBuffer = apb;
 				if (ioctl(pcm->fd, AUDIOIOC_ENQUEUEBUFFER, (unsigned long)&bufdesc) < 0) {
+					verma = 0;
 					return oops(pcm, errno, "failed to enque buffer after read\n");
 				}
+				verma = 6;
 			}
 
 		} else {
+			verma = 7;
 			/* We got here because we dont have any pending buffers */
 			/* Wait for deque message from kernel */
 			if (pcm->draining) {
+				verma = 8;
 				/* When we are in draining state, we will check for buffers already in the msg queue
 				   If there is no buffer on the queue, we return immediately */
 				clock_gettime(CLOCK_REALTIME, &st_time);
 				size = mq_timedreceive(pcm->mq, (FAR char *)&msg, sizeof(msg), &prio, &st_time);
+				verma = 9;
 				if (size != sizeof(msg)) {
 					pcm->draining = 0;
 					pcm->next_size = 0;
 					pcm->next_offset = 0;
 					pcm->next_buf = NULL;
+					verma = 0;
 					return pcm_frames_to_bytes(pcm, frame_count) - pending;
 				}
 			} else {
+				verma = 10;
 				size = mq_receive(pcm->mq, (FAR char *)&msg, sizeof(msg), &prio);
+				verma = 11;
 				if (size != sizeof(msg)) {
 					/* Interrupted by a signal? What to do? */
+					verma = 0;
 					return oops(pcm, EINTR, "Interrupted while waiting for deque message from kernel\n");
 				}
 			}
 			if (msg.msgId == AUDIO_MSG_DEQUEUE) {
+				verma = 12;
 				apb = (struct ap_buffer_s *)msg.u.pPtr;
 				if (pending <= apb->nbytes) {
+					verma = 13;
 					/* User wants less data than we have in buffer.
 					   Copy the requested amount of data and keep the buffer as pending buffer */
 					memcpy((char *)data + offset, apb->samp, pending);
@@ -672,12 +693,14 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 
 					nbytes = pending;
 				} else {
+					verma = 14;
 					/* User wants more data than we have in buffer.
 					   Copy available data to user buffer, enqueue buffer and return */
 					memcpy((char *)data + offset, apb->samp, apb->nbytes);
 					nbytes = apb->nbytes;
 
 					if (!pcm->draining) {
+						verma = 15;
 						/* Dont enque the buffer since we are draining and
 						   the pcm has already been stopped */
 						apb->nbytes = 0;
@@ -685,8 +708,10 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 						apb->flags = 0;
 						bufdesc.u.pBuffer = apb;
 						if (ioctl(pcm->fd, AUDIOIOC_ENQUEUEBUFFER, (unsigned long)&bufdesc) < 0) {
+							verma = 0;
 							return oops(pcm, errno, "failed to enque buffer after read\n");
 						}
+						verma = 16;
 					}
 				}
 			} else if (msg.msgId == AUDIO_MSG_MICMUTE) {
@@ -695,8 +720,10 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 				return -EHOSTUNREACH;
 			} else if (msg.msgId == AUDIO_MSG_XRUN) {
 				/* Underrun to be handled by client */
+				verma = 0;
 				return -EPIPE;
 			} else {
+				verma = 0;
 				return oops(pcm, EINTR, "Recieved unexpected msg (id = %d) while waiting for deque message from kernel\n", msg.msgId);
 			}
 		}
@@ -704,6 +731,7 @@ int pcm_readi(struct pcm *pcm, void *data, unsigned int frame_count)
 		offset += nbytes;
 		pending -= nbytes;
 	}
+	verma = 0;
 
 	return pcm_bytes_to_frames(pcm, pcm_frames_to_bytes(pcm, frame_count) - pending);
 }
