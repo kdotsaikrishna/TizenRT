@@ -57,7 +57,9 @@ player_result_t MediaPlayerImpl::create()
 	mpw.startWorker();
 
 	mpw.enQueue(&MediaPlayerImpl::createPlayer, shared_from_this(), std::ref(ret));
+	meddbg("Enqueue createPlayer done\n");
 	mSyncCv.wait(lock);
+	meddbg("After createPlayer Wait\n");
 
 	if (ret != PLAYER_OK) {
 		mpw.stopWorker();
@@ -95,7 +97,9 @@ player_result_t MediaPlayerImpl::destroy()
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::destroyPlayer, shared_from_this(), std::ref(ret));
+	meddbg("Enqueue destroyPlayer done\n");
 	mSyncCv.wait(lock);
+	meddbg("After destroyPlayer Wait\n");
 
 	if (ret == PLAYER_OK) {
 		if (mPlayerObserver) {
@@ -146,7 +150,9 @@ player_result_t MediaPlayerImpl::prepare()
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::preparePlayer, shared_from_this(), std::ref(ret));
+	meddbg("Enqueue preparePlayer done\n");
 	mSyncCv.wait(lock);
+	meddbg("After preparePlayer Wait\n");
 
 	return ret;
 }
@@ -228,6 +234,7 @@ player_result_t MediaPlayerImpl::prepareAsync()
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::prepareAsyncPlayer, shared_from_this());
+	meddbg("Enqueue prepareAsyncPlayer done\n");
 
 	return PLAYER_OK;
 }
@@ -266,7 +273,9 @@ player_result_t MediaPlayerImpl::unprepare()
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::unpreparePlayer, shared_from_this(), std::ref(ret));
+	meddbg("Enqueue unpreparePlayer done\n");
 	mSyncCv.wait(lock);
+	meddbg("After unpreparePlayer Wait\n");
 
 	return ret;
 }
@@ -343,6 +352,7 @@ player_result_t MediaPlayerImpl::start()
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::startPlayer, shared_from_this());
+	meddbg("Enqueue startPlayer done\n");
 
 	return PLAYER_OK;
 }
@@ -415,6 +425,7 @@ player_result_t MediaPlayerImpl::stop()
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::stopPlayer, shared_from_this(), PLAYER_OK);
+	meddbg("Enqueue stopPlayer done\n");
 
 	return PLAYER_OK;
 }
@@ -482,6 +493,7 @@ player_result_t MediaPlayerImpl::pause()
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::pausePlayer, shared_from_this());
+	meddbg("Enqueue pausePlayer done\n");
 
 	return PLAYER_OK;
 }
@@ -536,7 +548,9 @@ player_result_t MediaPlayerImpl::getVolume(uint8_t *vol)
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::getPlayerVolume, shared_from_this(), vol, std::ref(ret));
+	meddbg("Enqueue getPlayerVolume done\n");
 	mSyncCv.wait(lock);
+	meddbg("After getPlayerVolume Wait\n");
 
 	return ret;
 }
@@ -574,7 +588,9 @@ player_result_t MediaPlayerImpl::getMaxVolume(uint8_t *vol)
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::getPlayerMaxVolume, shared_from_this(), vol, std::ref(ret));
+	meddbg("Enqueue getPlayerMaxVolume done\n");
 	mSyncCv.wait(lock);
+	meddbg("After getPlayerMaxVolume Wait\n");
 
 	return ret;
 }
@@ -612,7 +628,9 @@ player_result_t MediaPlayerImpl::setVolume(uint8_t vol)
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::setPlayerVolume, shared_from_this(), vol, std::ref(ret));
+	meddbg("Enqueue setPlayerVolume done\n");
 	mSyncCv.wait(lock);
+	meddbg("After setPlayerVolume Wait\n");
 
 	return ret;
 }
@@ -652,7 +670,9 @@ player_result_t MediaPlayerImpl::setDataSource(std::unique_ptr<stream::InputData
 
 	std::shared_ptr<stream::InputDataSource> sharedDataSource = std::move(source);
 	mpw.enQueue(&MediaPlayerImpl::setPlayerDataSource, shared_from_this(), sharedDataSource, std::ref(ret));
+	meddbg("Enqueue setPlayerDataSource done\n");
 	mSyncCv.wait(lock);
+	meddbg("After setPlayerDataSource Wait\n");
 
 	return ret;
 }
@@ -691,7 +711,9 @@ player_result_t MediaPlayerImpl::setObserver(std::shared_ptr<MediaPlayerObserver
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::setPlayerObserver, shared_from_this(), observer);
+	meddbg("Enqueue setPlayerObserver done\n");
 	mSyncCv.wait(lock);
+	meddbg("After setPlayerObserver Wait\n");
 
 	return PLAYER_OK;
 }
@@ -726,7 +748,9 @@ player_result_t MediaPlayerImpl::setStreamInfo(std::shared_ptr<stream_info_t> st
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::setPlayerStreamInfo, shared_from_this(), stream_info, std::ref(ret));
+	meddbg("Enqueue setPlayerStreamInfo done\n");
 	mSyncCv.wait(lock);
+	meddbg("After setPlayerStreamInfo Wait\n");
 
 	return ret;
 }
@@ -773,7 +797,9 @@ bool MediaPlayerImpl::isPlaying()
 		}
 		notifySync();
 	});
+	meddbg("Enqueue isPlaying done\n");
 	mSyncCv.wait(lock);
+	meddbg("After isPlaying Wait\n");
 
 	return ret;
 }
@@ -793,7 +819,9 @@ player_result_t MediaPlayerImpl::setLooping(bool loop)
 	}
 
 	mpw.enQueue(&MediaPlayerImpl::setPlayerLooping, shared_from_this(), loop, std::ref(ret));
+	meddbg("Enqueue setPlayerLooping done\n");
 	mSyncCv.wait(lock);
+	meddbg("After setPlayerLooping Wait\n");
 
 	return ret;
 }
@@ -947,10 +975,12 @@ void MediaPlayerImpl::playback()
 			case AUDIO_MANAGER_XRUN_STATE:
 				meddbg("AUDIO_MANAGER_XRUN_STATE\n");
 				mpw.enQueue(&MediaPlayerImpl::stopPlayer, shared_from_this(), PLAYER_ERROR_INTERNAL_OPERATION_FAILED);
+				meddbg("Enqueue stopPlayer done\n");
 				break;
 			default:
 				meddbg("audio manager error : %d\n", ret);
 				mpw.enQueue(&MediaPlayerImpl::stopPlayer, shared_from_this(), PLAYER_ERROR_INTERNAL_OPERATION_FAILED);
+				meddbg("Enqueue stopPlayer done\n");
 				break;
 			}
 		}
@@ -967,6 +997,7 @@ void MediaPlayerImpl::playback()
 		notifyObserver(PLAYER_OBSERVER_COMMAND_PLAYBACK_ERROR, PLAYER_ERROR_INTERNAL_OPERATION_FAILED);
 		PlayerWorker &mpw = PlayerWorker::getWorker();
 		mpw.enQueue(&MediaPlayerImpl::stopPlayer, shared_from_this(), PLAYER_ERROR_INVALID_OPERATION);
+		meddbg("Enqueue stopPlayer done\n");
 	}
 }
 
