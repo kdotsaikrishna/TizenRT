@@ -28,7 +28,7 @@
 
 namespace media {
 
-#define LOG_STATE_INFO(state) medvdbg("state at %s[line : %d] : %s\n", __func__, __LINE__, player_state_names[(state)])
+#define LOG_STATE_INFO(state) meddbg("state at %s[line : %d] : %s\n", __func__, __LINE__, player_state_names[(state)])
 #define LOG_STATE_DEBUG(state) meddbg("state at %s[line : %d] : %s\n", __func__, __LINE__, player_state_names[(state)])
 
 MediaPlayerImpl::MediaPlayerImpl(MediaPlayer &player) : mPlayer(player)
@@ -225,7 +225,7 @@ player_result_t MediaPlayerImpl::prepareAsync()
 	}
 
 	std::unique_lock<std::mutex> lock(mCmdMtx);
-	medvdbg("MediaPlayer prepareAsync\n");
+	meddbg("MediaPlayer prepareAsync\n");
 
 	PlayerWorker &mpw = PlayerWorker::getWorker();
 	if (!mpw.isAlive()) {
@@ -573,7 +573,7 @@ player_result_t MediaPlayerImpl::getMaxVolume(uint8_t *vol)
 	player_result_t ret = PLAYER_OK;
 
 	std::unique_lock<std::mutex> lock(mCmdMtx);
-	medvdbg("MediaPlayer getMaxVolume\n");
+	meddbg("MediaPlayer getMaxVolume\n");
 
 	if (vol == nullptr) {
 		meddbg("The given argument is invalid.\n");
@@ -637,7 +637,7 @@ player_result_t MediaPlayerImpl::setVolume(uint8_t vol)
 
 void MediaPlayerImpl::setPlayerVolume(uint8_t vol, player_result_t &ret)
 {
-	medvdbg("MediaPlayer Worker : setVolume %d\n", vol);
+	meddbg("MediaPlayer Worker : setVolume %d\n", vol);
 
 	audio_manager_result_t result = set_output_audio_volume(vol, mStreamInfo->policy);
 	if (result != AUDIO_MANAGER_SUCCESS) {
@@ -702,7 +702,7 @@ void MediaPlayerImpl::setPlayerDataSource(std::shared_ptr<stream::InputDataSourc
 player_result_t MediaPlayerImpl::setObserver(std::shared_ptr<MediaPlayerObserverInterface> observer)
 {
 	std::unique_lock<std::mutex> lock(mCmdMtx);
-	medvdbg("MediaPlayer setObserver mPlayer : %x\n", &mPlayer);
+	meddbg("MediaPlayer setObserver mPlayer : %x\n", &mPlayer);
 
 	PlayerWorker &mpw = PlayerWorker::getWorker();
 	if (!mpw.isAlive()) {
@@ -739,7 +739,7 @@ player_result_t MediaPlayerImpl::setStreamInfo(std::shared_ptr<stream_info_t> st
 	player_result_t ret = PLAYER_OK;
 
 	std::unique_lock<std::mutex> lock(mCmdMtx);
-	medvdbg("MediaPlayer setStreamInfo mPlayer : %x\n", &mPlayer);
+	meddbg("MediaPlayer setStreamInfo mPlayer : %x\n", &mPlayer);
 
 	PlayerWorker &mpw = PlayerWorker::getWorker();
 	if (!mpw.isAlive()) {
@@ -809,7 +809,7 @@ player_result_t MediaPlayerImpl::setLooping(bool loop)
 	player_result_t ret = PLAYER_OK;
 
 	std::unique_lock<std::mutex> lock(mCmdMtx);
-	medvdbg("MediaPlayer setLooping mPlayer : %x loop : %d\n", &mPlayer, loop);
+	meddbg("MediaPlayer setLooping mPlayer : %x loop : %d\n", &mPlayer, loop);
 
 	PlayerWorker &mpw = PlayerWorker::getWorker();
 

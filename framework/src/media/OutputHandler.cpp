@@ -31,7 +31,7 @@ OutputHandler::OutputHandler() :
 	mIsFlushing(false)
 {
 	mWorkerStackSize = CONFIG_OUTPUT_DATASOURCE_STACKSIZE;
-	var = 1;
+	// var = 1;
 }
 
 void OutputHandler::setOutputDataSource(std::shared_ptr<OutputDataSource> source)
@@ -212,8 +212,8 @@ ssize_t OutputHandler::writeToStreamBuffer(unsigned char *buf, size_t size)
 
 bool OutputHandler::registerCodec(audio_type_t audioType, unsigned int channels, unsigned int sampleRate)
 {
-	mBufferReader->var = 1;
-	mBufferWriter->var = 1;
+	// mBufferReader->var = 1;
+	// mBufferWriter->var = 1;
 	switch (audioType) {
 	case AUDIO_TYPE_OPUS: {
 		auto encoder = Encoder::create(audioType, channels, sampleRate);
