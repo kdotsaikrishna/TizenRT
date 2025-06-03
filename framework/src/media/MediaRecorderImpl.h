@@ -70,13 +70,8 @@ const char *const recorder_state_names[] = {
 };
 
 typedef enum recorder_observer_command_e {
-	RECORDER_OBSERVER_COMMAND_STARTED,
-	RECORDER_OBSERVER_COMMAND_PAUSED,
 	RECORDER_OBSERVER_COMMAND_FINISHIED,
 	RECORDER_OBSERVER_COMMAND_STOPPED,
-	RECORDER_OBSERVER_COMMAND_START_ERROR,
-	RECORDER_OBSERVER_COMMAND_PAUSE_ERROR,
-	RECORDER_OBSERVER_COMMAND_STOP_ERROR,
 	RECORDER_OBSERVER_COMMAND_BUFFER_OVERRUN,
 	RECORDER_OBSERVER_COMMAND_BUFFER_UNDERRUN,
 	RECORDER_OBSERVER_COMMAND_BUFFER_DATAREACHED,
@@ -123,10 +118,12 @@ private:
 	void getRecorderVolume(uint8_t *vol, recorder_result_t& ret);
 	void getRecorderMaxVolume(uint8_t *vol, recorder_result_t& ret);
 	void setRecorderVolume(uint8_t vol, recorder_result_t& ret);
-	void setRecorderObserver(std::shared_ptr<MediaRecorderObserverInterface> observer);
+	void setRecorderObserver(std::shared_ptr<MediaRecorderObserverInterface> observer, recorder_result_t& ret);
+	void unsetRecorderObserver();
 	void setRecorderDataSource(std::shared_ptr<stream::OutputDataSource> dataSource, recorder_result_t& ret);
 	void setRecorderDuration(int second, recorder_result_t& ret);
 	void setRecorderFileSize(int byte, recorder_result_t& ret);
+	void dequeueAndRunObserverCallback();
 
 private:
 	std::atomic<recorder_state_t> mCurState;
@@ -143,6 +140,7 @@ private:
 	uint32_t mTotalFrames;
 	uint32_t mCapturedFrames;
 	std::shared_ptr<stream_info_t> mStreamInfo;
+	MediaQueue mObserverQueue;
 };
 } // namespace media
 

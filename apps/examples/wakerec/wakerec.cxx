@@ -52,6 +52,8 @@ static const char *filePath = "/tmp/record.pcm";
 uint8_t *gBuffer = NULL;
 uint32_t bufferSize = 0;
 
+static bool isRecording = false;
+
 class WakeRec : public media::voice::SpeechDetectorListenerInterface,public FocusChangeListener,
 				public media::MediaRecorderObserverInterface, public media::MediaPlayerObserverInterface,
 				public std::enable_shared_from_this<WakeRec>
@@ -132,6 +134,7 @@ private:
 		mr.unprepare();
 		mr.destroy();
 		fclose(fp);
+		isRecording = false;
 		playRecordVoice();
 	}
 	void onRecordStartError(media::MediaRecorder &mediaRecorder, media::recorder_error_t errCode) override
@@ -158,12 +161,17 @@ private:
 			mr.unprepare();
 			mr.destroy();
 			fclose(fp);
+			isRecording = false;
 			playRecordVoice();
 		}
 	}
 
 	void onRecordBufferDataReached(media::MediaRecorder &mediaRecorder, std::shared_ptr<unsigned char> data, size_t size) override
 	{
+		if (!isRecording) {
+			fp = fopen(filePath, "ab");
+			isRecording = true;
+		}
 		printf("###########################################\n");
 		printf("####      onRecordBufferDataReached    ####\n");
 		printf("###########################################\n");
@@ -233,6 +241,7 @@ private:
 					printf("kd data extraction failed\n");
 				}
 			}
+			fclose(fp);
 			sd->stopKeywordDetect();
 			startRecord();
 		} else if (event == SPEECH_DETECT_EPD) {
