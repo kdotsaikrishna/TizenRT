@@ -301,6 +301,8 @@ speech_detect_event_type_e SpeechDetectorImpl::getSpeechDetectEvent(audio_device
 		return SPEECH_DETECT_NONE;
 	case AUDIO_DEVICE_SPEECH_DETECT_EPD:
 		return SPEECH_DETECT_EPD;
+	case AUDIO_DEVICE_SPEECH_DETECT_SPD:
+		return SPEECH_DETECT_SPD;
 	case AUDIO_DEVICE_SPEECH_DETECT_KD:
 		return SPEECH_DETECT_KD;
 	case AUDIO_DEVICE_SPEECH_DETECT_LOCAL:
